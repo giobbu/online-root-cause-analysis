@@ -1,0 +1,12 @@
+services:
+  app:
+    container_name: kafka-spark-app
+    build:
+      context: .
+    image: kafka-spark-app:latest
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    env_file:
+      - .env
+    volumes:
+      - ./data:/home/guest/data
