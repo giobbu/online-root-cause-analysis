@@ -8,5 +8,7 @@ services:
     tty: true        # docker run -t
     env_file:
       - .env
+    ports:
+      - "8888:8888"
     volumes:
       - ./data:/home/guest/data
