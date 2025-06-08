@@ -1,3 +1,4 @@
+![Status](https://img.shields.io/badge/status-development-orange)
 # Online Root Cause Analysis
 
 ## Docker Setup
