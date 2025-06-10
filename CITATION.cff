@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: Online Root Cause Analysis
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Giovanni
+    family-names: Buroni
+    email: giovanniburoni@gmail.com
+    name-particle: giovanni
+identifiers:
+  - type: url
+    value: 'https://github.com/giobbu'
+repository-code: 'https://github.com/giobbu/online-root-cause-analysis'
+abstract: Online concept drift detection and root cause analysis.
+keywords:
+  - Concept-Drift
+  - Streaming-Analytics
+  - Root-Cause-Analysis
+license: GPL-3.0
+commit: 6e2992e
+version: 0.1.0-alpha
+date-released: '2025-06-10'
