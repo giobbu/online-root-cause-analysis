@@ -41,11 +41,30 @@ docker-compose run --rm app
 ```
 * `--rm`: flag to remove the container after it stops.
 
-### Check Spark Installation
+### Start Zookeper and Kafka services
+Logged as root user in `usr/bin` start kafka server
+
+```bash
+start_services.sh
+```
+
+Check `kafka.log` and `zookeeper.log` are in `home/guest`
+
+```bash
+anaconda3  kafka  kafka.log  notebooks  spark  zookeeper.log
+```
+
+
+### Spark Installation
+
+In `home/guest`
+
 ```bash
 pyspark --version
 ```
-Output:
+
+Output
+
 ```bash
 Welcome to
       ____              __
@@ -56,6 +75,18 @@ Welcome to
                         
 Using Scala version 2.12.18, OpenJDK 64-Bit Server VM, 11.0.25
 ```
+### Start Jupyter Notebook
+
+Switch to guest user
+```bash
+su guest
+```
+And start jupyter notebook
+
+```bash
+notebook
+```
+Connect to ` http://127.0.0.1:8889/tree?token=<token>`
 
 ### Docker Configuration Details (TODO)
 
