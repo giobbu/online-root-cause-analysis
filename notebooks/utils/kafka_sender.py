@@ -5,21 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import datetime
 
-def set_sensor_delay(params):
-    """
-    Set sensor delay either fix or random mode
-    Args:
-        params (SensorParams): Parameters for the sensor data generation.
-    """
-    if params.delay_mode == "fix":
-        time.sleep(params.delay_value)
-    elif params.delay_mode == "random":
-        if params.max_delay is None:
-            raise ValueError("max_delay should be specified in delay_mode 'random'")
-        time.sleep(random.uniform(params.delay_value, params.max_delay))
-    else:
-        raise ValueError("delay_mode should be 'fix' or 'random'")
-
 def plot_sens_obs(obs_data_stream:np.array, ylim_low:int=-20, ylim_up:int=20, color='blue'):
     """
     Plot sensor data streams
@@ -70,7 +55,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
     data_value = np.random.normal(params.mu, params.sigma) + noise
 
     if params.drifts:
-        for i, drift_event in enumerate(params.drifts):
+        for _, drift_event in enumerate(params.drifts):
             t0 = drift_event['drift-event'].t0_drift
             delta = drift_event['drift-event'].delta_drift
             if t0 <= time_step <= t0 + delta:
@@ -78,14 +63,13 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
                 data_value = np.random.normal(mu_drift, params.sigma) + noise
                 drift = True
                 break
-        
+
+    delay_value = np.random.uniform(0, params.max_delay)
     data_sent={'sensor': params.sensor_name,
-               'info': {'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+               'info': {'timestamp_sent': (datetime.datetime.now()- datetime.timedelta(seconds=delay_value)).strftime('%Y-%m-%d %H:%M:%S'),
+                        'timestamp_received': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         'obs': data_value,
                         'drift': drift}}
-    # simulate delay
-    set_sensor_delay(params)
-    
     try:
         future= producer.send(topic, value=data_sent)
         record = future.get(timeout=10)
@@ -140,6 +124,6 @@ if __name__ == "__main__":
     params_sens2 = SensorParams(sensor_name="Sensor-2", mu=5, sigma=1, eps=0.1, delay_mode="random", delay_value=0.2, max_delay=1)
     params_sens3 = SensorParams(sensor_name="Sensor-3", mu=-5, sigma=1, eps=0.1, delay_mode="fix", delay_value=0.3)
 
-    stream_data = generator_streaming_data(producer, params_sens1, params_sens2, params_sens3):
+    stream_data = generator_streaming_data(producer, params_sens1, params_sens2, params_sens3)
     for data in stream_data:
         print(data)

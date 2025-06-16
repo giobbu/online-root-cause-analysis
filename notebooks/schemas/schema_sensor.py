@@ -13,7 +13,5 @@ class SensorParams:
     mu: float
     sigma: float
     eps: float
-    delay_mode: str  # "fix" or "random"
-    delay_value: float
     max_delay: float = None  # Optional for "random" delay mode
     drifts:list = None
