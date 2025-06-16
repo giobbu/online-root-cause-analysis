@@ -20,14 +20,14 @@ def set_sensor_delay(params):
     else:
         raise ValueError("delay_mode should be 'fix' or 'random'")
 
-def plot_sens_obs(obs_data_stream:np.array, ylim_low:int=-20, ylim_up:int=20):
+def plot_sens_obs(obs_data_stream:np.array, ylim_low:int=-20, ylim_up:int=20, color='blue'):
     """
     Plot sensor data streams
     """
     fig, axes = plt.subplots(nrows=len(obs_data_stream), ncols=1, figsize=(15, 6), sharex=True)
     for idx, ax in enumerate(axes):
-        ax.plot(np.arange(len(obs_data_stream[idx])), obs_data_stream[idx])
-        ax.scatter(np.arange(len(obs_data_stream[idx])), obs_data_stream[idx])
+        ax.plot(np.arange(len(obs_data_stream[idx])), obs_data_stream[idx], color=color)
+        ax.scatter(np.arange(len(obs_data_stream[idx])), obs_data_stream[idx], color=color)
         ax.set_ylabel(f"Sensor-{idx + 1}")
         ax.set_xlabel("Time Step")
         ax.set_ylim(ylim_low, ylim_up)
@@ -89,7 +89,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
     try:
         future= producer.send(topic, value=data_sent)
         record = future.get(timeout=10)
-        print(f"Message delivered: topic-{record.topic}:partition-{record.partition}")
+        #print(f"Message delivered: device-{params.sensor_name}:topic-{record.topic}:partition-{record.partition}")
     except Exception as e:
         print(f"Error sending data to Kafka: {e}")
         
@@ -102,9 +102,8 @@ def stream_data(producer, params_sens1, params_sens2, params_sens3, SEED=42):
     i = 0  # time step
 
     while True:
-        print("--" * 20)
-        print(f"Time step {i}\n")
 
+        
         # Sensor-1
         data_1, drift_1, delay_1 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens1, time_step=i
@@ -117,13 +116,7 @@ def stream_data(producer, params_sens1, params_sens2, params_sens3, SEED=42):
         data_3, drift_3, delay_3 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens3, time_step=i
         )
-
-        # Optional print/log output
-        print(f"[sensor-1] Obs: {round(data_1, 3)}, Drift: {drift_1}, Delay: {round(delay_1, 3)}")
-        print(f"[sensor-2] Obs: {round(data_2, 3)}, Drift: {drift_2}, Delay: {round(delay_2, 3)}")
-        print(f"[sensor-3] Obs: {round(data_3, 3)}, Drift: {drift_3}, Delay: {round(delay_3, 3)}")
-        print(f"\nTotal Delay: {delay_1 + delay_2 + delay_3}\n")
-
+        
         # Yield a structured data point
         yield {
             "time_step": i,
