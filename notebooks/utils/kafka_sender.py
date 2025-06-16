@@ -97,7 +97,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
     
     return data_value, drift, end_time
 
-def stream_data(producer, params_sens1, params_sens2, params_sens3, SEED=42):
+def generator_streaming_data(producer, params_sens1, params_sens2, params_sens3, SEED=42):
     np.random.seed(SEED)
     i = 0  # time step
 
@@ -140,6 +140,6 @@ if __name__ == "__main__":
     params_sens2 = SensorParams(sensor_name="Sensor-2", mu=5, sigma=1, eps=0.1, delay_mode="random", delay_value=0.2, max_delay=1)
     params_sens3 = SensorParams(sensor_name="Sensor-3", mu=-5, sigma=1, eps=0.1, delay_mode="fix", delay_value=0.3)
 
-    for data in stream_data(producer, params_sens1, params_sens2, params_sens3):
+    stream_data = generator_streaming_data(producer, params_sens1, params_sens2, params_sens3):
+    for data in stream_data:
         print(data)
-        time.sleep(1)  # Simulate a wait time between data points
