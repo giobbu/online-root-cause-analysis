@@ -13,5 +13,7 @@ class SensorParams:
     mu: float
     sigma: float
     eps: float
+    eps_nan:float = 0.0
     max_delay: float = None  # Optional for "random" delay mode
     drifts:list = None
+    eps_nan:float
