@@ -64,6 +64,10 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
                 drift = True
                 break
 
+    missing = np.random.random()
+    if missing < params.eps_nan:
+        data_value = None
+
     delay_value = np.random.uniform(0, params.max_delay)
     data_sent={'sensor': params.sensor_name,
                'info': {'timestamp_sent': (datetime.datetime.now()- datetime.timedelta(seconds=delay_value)).strftime('%Y-%m-%d %H:%M:%S'),
