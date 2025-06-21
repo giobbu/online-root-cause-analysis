@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import datetime
+from matplotlib.colors import ListedColormap
 
 def plot_sens_obs(obs_data_stream:np.array, ylim_low:int=-20, ylim_up:int=20, color='blue'):
     """
@@ -23,10 +24,11 @@ def plot_drift_stream(drift_data_stream:np.array):
     """
     Plot drifts in data streaming
     """
+    custom_cmap = ListedColormap(['blue', 'gray', 'red'])
     fig, axes = plt.subplots(nrows=len(drift_data_stream), ncols=1, figsize=(15, 6), sharex=True)
     for idx, ax in enumerate(axes):
         sns.heatmap(drift_data_stream[idx].reshape(1, -1), 
-                    cmap="coolwarm", 
+                    cmap=custom_cmap, 
                     cbar=False, 
                     linewidths=1, 
                     linecolor='white', 
@@ -83,7 +85,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
         
     end_time=time.time()-start_time
     
-    return data_value, drift, end_time
+    return data_value, drift
 
 def generator_streaming_data(producer, params_sens1, params_sens2, params_sens3, SEED=42):
     np.random.seed(SEED)
@@ -93,25 +95,24 @@ def generator_streaming_data(producer, params_sens1, params_sens2, params_sens3,
 
         
         # Sensor-1
-        data_1, drift_1, delay_1 = send_sensor_data(
+        data_1, drift_1 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens1, time_step=i
         )
         # Sensor-2
-        data_2, drift_2, delay_2 = send_sensor_data(
+        data_2, drift_2 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens2, time_step=i
         )
         # Sensor-3
-        data_3, drift_3, delay_3 = send_sensor_data(
+        data_3, drift_3 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens3, time_step=i
         )
         
         # Yield a structured data point
         yield {
             "time_step": i,
-            "sensor_1": {"obs": data_1, "drift": drift_1, "delay": delay_1},
-            "sensor_2": {"obs": data_2, "drift": drift_2, "delay": delay_2},
-            "sensor_3": {"obs": data_3, "drift": drift_3, "delay": delay_3},
-            "total_delay": delay_1 + delay_2 + delay_3
+            "sensor_1": {"obs": data_1, "drift": drift_1},
+            "sensor_2": {"obs": data_2, "drift": drift_2},
+            "sensor_3": {"obs": data_3, "drift": drift_3},
         }
 
         i += 1
