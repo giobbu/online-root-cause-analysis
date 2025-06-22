@@ -62,8 +62,13 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
             delta = drift_event['drift-event'].delta_drift
             if t0 <= time_step <= t0 + delta:
                 mu_drift = drift_event['drift-event'].mu_drift
-                data_value = np.random.normal(mu_drift, params.sigma) + noise
-                drift = True
+                if drift_event['drift-event'].drift_type == "sudden":
+                    data_value = np.random.normal(mu_drift, params.sigma) + noise
+                    drift = 1
+                elif drift_event['drift-event'].drift_type == "gradual":
+                    gradual_drift = np.linspace(params.mu, mu_drift, delta)
+                    data_value = np.random.normal(gradual_drift[time_step-t0-1], params.sigma) + noise
+                    drift=2
                 break
 
     missing = np.random.random()
