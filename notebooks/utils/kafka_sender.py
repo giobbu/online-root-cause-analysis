@@ -51,8 +51,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
     Returns:
         tuple: Generated data value and the time taken to send the data.
     """
-    start_time=time.time()
-    noise= params.eps * np.random.normal(0, 1)
+    noise = params.eps * np.random.normal(0, 1)
     drift = False
     data_value = np.random.normal(params.mu, params.sigma) + noise
 
@@ -67,7 +66,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
                     drift = 1
                 elif drift_event['drift-event'].drift_type == "gradual":
                     gradual_drift = np.linspace(params.mu, mu_drift, delta)
-                    data_value = np.random.normal(gradual_drift[time_step-t0-1], params.sigma) + noise
+                    data_value = np.random.normal(gradual_drift[time_step-t0], params.sigma) + noise
                     drift=2
                 break
 
@@ -77,7 +76,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
 
     delay_value = np.random.uniform(0, params.max_delay)
     data_sent={'sensor': params.sensor_name,
-               'info': {'timestamp_sent': (datetime.datetime.now()- datetime.timedelta(seconds=delay_value)).strftime('%Y-%m-%d %H:%M:%S'),
+               'info': {'timestamp_sent': (datetime.datetime.now()-datetime.timedelta(seconds=delay_value)).strftime('%Y-%m-%d %H:%M:%S'),
                         'timestamp_received': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         'obs': data_value,
                         'drift': drift}}
@@ -87,18 +86,13 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
         #print(f"Message delivered: device-{params.sensor_name}:topic-{record.topic}:partition-{record.partition}")
     except Exception as e:
         print(f"Error sending data to Kafka: {e}")
-        
-    end_time=time.time()-start_time
-    
+            
     return data_value, drift
 
 def generator_streaming_data(producer, params_sens1, params_sens2, params_sens3, SEED=42):
     np.random.seed(SEED)
     i = 0  # time step
-
     while True:
-
-        
         # Sensor-1
         data_1, drift_1 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens1, time_step=i
@@ -111,7 +105,6 @@ def generator_streaming_data(producer, params_sens1, params_sens2, params_sens3,
         data_3, drift_3 = send_sensor_data(
             producer=producer, topic="sensors", params=params_sens3, time_step=i
         )
-        
         # Yield a structured data point
         yield {
             "time_step": i,
@@ -119,21 +112,16 @@ def generator_streaming_data(producer, params_sens1, params_sens2, params_sens3,
             "sensor_2": {"obs": data_2, "drift": drift_2},
             "sensor_3": {"obs": data_3, "drift": drift_3},
         }
-
         i += 1
 
 if __name__ == "__main__":
-    
-    # Example usage
     from kafka import KafkaProducer
     from schemas.schema_sensor import SensorParams
 
     producer = KafkaProducer(bootstrap_servers='localhost:9092')
-
     params_sens1 = SensorParams(sensor_name="Sensor-1", mu=0, sigma=1, eps=0.1, delay_mode="fix", delay_value=0.5)
     params_sens2 = SensorParams(sensor_name="Sensor-2", mu=5, sigma=1, eps=0.1, delay_mode="random", delay_value=0.2, max_delay=1)
     params_sens3 = SensorParams(sensor_name="Sensor-3", mu=-5, sigma=1, eps=0.1, delay_mode="fix", delay_value=0.3)
-
     stream_data = generator_streaming_data(producer, params_sens1, params_sens2, params_sens3)
     for data in stream_data:
         print(data)
