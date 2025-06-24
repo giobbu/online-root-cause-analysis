@@ -58,7 +58,7 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
     if params.drifts:
         for _, drift_event in enumerate(params.drifts):
             t0 = drift_event['drift-event'].t0_drift
-            delta = drift_event['drift-event'].delta_drift
+            delta = drift_event['drift-event'].duration_drift
             if t0 <= time_step <= t0 + delta:
                 mu_drift = drift_event['drift-event'].mu_drift
                 if drift_event['drift-event'].drift_type == "sudden":
