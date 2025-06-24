@@ -41,7 +41,30 @@ def plot_drift_stream(drift_data_stream:np.array):
     plt.show()
 
 
-def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
+def sudden_mean_drift(drift_info, params):
+    """ Simulates a sudden mean drift in sensor data.
+    Args:
+        drift_info (DriftParams): Information about the drift event.
+        params (SensorParams): Parameters of the sensor.
+    """
+    data_value = np.random.normal(drift_info.mu_drift, params.sigma) + params.eps * np.random.normal(0, 1)
+    drift = 1
+    return data_value, drift
+
+def gradual_mean_drift(drift_info, params, time_step:int):
+    """ Simulates a sudden mean drift in sensor data.
+    Args:
+        drift_info (DriftParams): Information about the drift event.
+        params (SensorParams): Parameters of the sensor.
+        time_step (int): Current time step in the simulation.
+    """
+    gradual_drift = np.linspace(params.mu, drift_info.mu_drift, drift_info.duration_drift)
+    data_value = np.random.normal(gradual_drift[time_step - drift_info.t0_drift], params.sigma) + params.eps * np.random.normal(0, 1)
+    drift=2
+    return data_value, drift
+
+
+def send_sensor_data(producer, topic: str, params: 'SensorParams', time_step: int):
     """Send sensor data to Kafka topic with specified parameters.
     Args:
         producer (KafkaProducer): Kafka producer instance.
@@ -57,17 +80,19 @@ def send_sensor_data(producer, topic: str, params, time_step: int) -> tuple:
 
     if params.drifts:
         for _, drift_event in enumerate(params.drifts):
-            t0 = drift_event['drift-event'].t0_drift
-            delta = drift_event['drift-event'].duration_drift
+            drift_info = drift_event['drift-event']
+            t0 = drift_info.t0_drift
+            delta = drift_info.duration_drift
             if t0 <= time_step <= t0 + delta:
-                mu_drift = drift_event['drift-event'].mu_drift
-                if drift_event['drift-event'].drift_type == "sudden":
-                    data_value = np.random.normal(mu_drift, params.sigma) + noise
-                    drift = 1
-                elif drift_event['drift-event'].drift_type == "gradual":
-                    gradual_drift = np.linspace(params.mu, mu_drift, delta)
-                    data_value = np.random.normal(gradual_drift[time_step-t0], params.sigma) + noise
-                    drift=2
+                if drift_info.drift_type == "sudden":
+                    data_value,\
+                        drift = sudden_mean_drift(drift_info=drift_info, 
+                                                          params=params)
+                elif drift_info.drift_type == "gradual":
+                    data_value, \
+                        drift = gradual_mean_drift(drift_info=drift_info, 
+                                                   params=params, 
+                                                   time_step=time_step)
                 break
 
     missing = np.random.random()
