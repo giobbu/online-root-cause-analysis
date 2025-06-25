@@ -51,6 +51,17 @@ def sudden_mean_drift(drift_info, params):
     drift = 1
     return data_value, drift
 
+def sudden_sigma_drift(drift_info, params):
+    """ Simulates a sudden mean drift in sensor data.
+    Args:
+        drift_info (DriftParams): Information about the drift event.
+        params (SensorParams): Parameters of the sensor.
+    """
+    assert drift_info.sigma_drift>0, "sigma should be positive"
+    data_value = np.random.normal(params.mu, drift_info.sigma_drift) + params.eps * np.random.normal(0, 1)
+    drift = 2
+    return data_value, drift
+
 def gradual_mean_drift(drift_info, params, time_step:int):
     """ Simulates a sudden mean drift in sensor data.
     Args:
@@ -58,11 +69,22 @@ def gradual_mean_drift(drift_info, params, time_step:int):
         params (SensorParams): Parameters of the sensor.
         time_step (int): Current time step in the simulation.
     """
-    gradual_drift = np.linspace(params.mu, drift_info.mu_drift, drift_info.duration_drift)
-    data_value = np.random.normal(gradual_drift[time_step - drift_info.t0_drift], params.sigma) + params.eps * np.random.normal(0, 1)
-    drift=2
+    mu_gradual_drift = np.linspace(params.mu, drift_info.mu_drift, drift_info.duration_drift +1)
+    data_value = np.random.normal(mu_gradual_drift[time_step - drift_info.t0_drift], params.sigma) + params.eps * np.random.normal(0, 1)
+    drift=3
     return data_value, drift
 
+def gradual_sigma_drift(drift_info, params, time_step:int):
+    """ Simulates a sudden mean drift in sensor data.
+    Args:
+        drift_info (DriftParams): Information about the drift event.
+        params (SensorParams): Parameters of the sensor.
+        time_step (int): Current time step in the simulation.
+    """
+    sigma_gradual_drift = np.linspace(params.sigma, drift_info.sigma_drift, drift_info.duration_drift +1)
+    data_value = np.random.normal(params.mu, sigma_gradual_drift[time_step - drift_info.t0_drift]) + params.eps * np.random.normal(0, 1)
+    drift=4
+    return data_value, drift
 
 def send_sensor_data(producer, topic: str, params: 'SensorParams', time_step: int):
     """Send sensor data to Kafka topic with specified parameters.
@@ -75,7 +97,7 @@ def send_sensor_data(producer, topic: str, params: 'SensorParams', time_step: in
         tuple: Generated data value and the time taken to send the data.
     """
     noise = params.eps * np.random.normal(0, 1)
-    drift = False
+    drift = 0
     data_value = np.random.normal(params.mu, params.sigma) + noise
 
     if params.drifts:
@@ -84,13 +106,22 @@ def send_sensor_data(producer, topic: str, params: 'SensorParams', time_step: in
             t0 = drift_info.t0_drift
             delta = drift_info.duration_drift
             if t0 <= time_step <= t0 + delta:
-                if drift_info.drift_type == "sudden":
+                if drift_info.drift_type == "mean-sudden":
                     data_value,\
                         drift = sudden_mean_drift(drift_info=drift_info, 
-                                                          params=params)
-                elif drift_info.drift_type == "gradual":
+                                                    params=params)
+                elif drift_info.drift_type == "sigma-sudden":
+                    data_value,\
+                        drift = sudden_sigma_drift(drift_info=drift_info, 
+                                                     params=params)
+                elif drift_info.drift_type == "mean-gradual":
                     data_value, \
                         drift = gradual_mean_drift(drift_info=drift_info, 
+                                                   params=params, 
+                                                   time_step=time_step)
+                elif drift_info.drift_type == "sigma-gradual":
+                    data_value, \
+                        drift = gradual_sigma_drift(drift_info=drift_info, 
                                                    params=params, 
                                                    time_step=time_step)
                 break

@@ -4,8 +4,9 @@ from dataclasses import dataclass
 class DriftParams:
     t0_drift:int = None
     mu_drift:float = None
+    sigma_drift:float=None
     duration_drift:int = None
-    drift_type:str = "sudden"  # "gradual"
+    drift_type:str = "mean-sudden"  # "mean-gradual", # "sigma-sudden"
 
 
 @dataclass
