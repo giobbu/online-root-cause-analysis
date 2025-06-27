@@ -1,4 +1,10 @@
 # Byte-compiled / optimized / DLL files
+
+/notebooks/data/
+/notebooks/final_output/.*
+/notebooks/final_output/*SUCCESS
+
+
 __pycache__/
 *.py[cod]
 *$py.class
